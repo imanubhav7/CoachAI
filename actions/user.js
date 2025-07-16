@@ -6,6 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { generateAIInsights } from "./dashboard";
 
 
+
+// Update User 
 export async function updateUser(data) {
     const {userId} = await auth();
      console.log("User ID from Clerk:", userId)
@@ -47,7 +49,7 @@ try {
                            nextUpdate : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                           }, 
                         });
-                        return industryInsight
+                        // return industryInsight
                   
                     
                 }
@@ -78,7 +80,7 @@ try {
 }
 }
 
-
+// user Onboarding 
 export async function getUserOnboardingStatus(){
        const {userId} = await auth();
     if(!userId) throw new Error("Unauthorized");
