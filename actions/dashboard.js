@@ -9,6 +9,8 @@ const model = genAI.getGenerativeModel({
     model : "gemini-1.5-flash",
 })
 
+// Generating the industry details 
+
 export const generateAIInsights = async (industry) => {
 const prompt = `
           Analyze the current state of the ${industry} industry and provide insights in ONLY the following JSON format without any additional notes or explanations:
@@ -43,6 +45,9 @@ const prompt = `
 
     
 };
+
+
+// Getting the industry insights
 
 export async function getIndustryInsight() {
   const { userId } = await auth();
