@@ -4,7 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../components/ui/dropdown-menu"
 
 import {
   ClerkProvider,
@@ -20,7 +20,7 @@ import React from "react";
 import Logo from "../public/Logo.webp";
 import { Button } from "./ui/button";
 import { ChevronDown, File, FileText, GraduationCap, LayoutDashboard, PenBox, StarsIcon } from "lucide-react";
-import { checkUser } from "@/lib/checkUser";
+import { checkUser } from "../lib/checkUser";
 
 
 
@@ -74,7 +74,7 @@ const Header = async () => {
                 </DropdownMenuItem>
 
               <DropdownMenuItem>
-                <Link href={'/resume'} className="flex items-center gap-2">
+                <Link href={'/interview'} className="flex items-center gap-2">
                  <GraduationCap className="h-4 w-4" />
               <span >Interview Prep</span>
                 </Link>

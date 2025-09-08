@@ -82,11 +82,11 @@ model IndustryInsight {
 
   // Industry trends
   growthRate  Float // Industry growth rate
-  demandLevel String // "High", "Medium", "Low"
+  demandLevel DemandLevel // "High", "Medium", "Low"
   topSkills   String[] // Most in-demand skills
 
   // Market conditions
-  marketOutLook String // "Positive", "Neutral", "Negative"
+  marketOutLook MarketOutlook // "Positive", "Neutral", "Negative"
   keyTrends     String[] // Array of current industry trends
 
   // Learning suggestions

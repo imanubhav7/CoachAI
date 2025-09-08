@@ -4,24 +4,20 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-const model = genAI.getGenerativeModel({
-    model : "gemini-1.5-flash",
-})
-
-// Generating the industry details 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const generateAIInsights = async (industry) => {
-const prompt = `
+  const prompt = `
           Analyze the current state of the ${industry} industry and provide insights in ONLY the following JSON format without any additional notes or explanations:
           {
             "salaryRanges": [
               { "role": "string", "min": number, "max": number, "median": number, "location": "string" }
             ],
             "growthRate": number,
-            "demandLevel": "HIGH" | "MEDIUM" | "LOW",
+            "demandLevel": "High" | "Medium" | "Low",
             "topSkills": ["skill1", "skill2"],
-            "marketOutLook": "POSITIVE" | "NEUTRAL" | "NEGATIVE",
+            "marketOutlook": "Positive" | "Neutral" | "Negative",
             "keyTrends": ["trend1", "trend2"],
             "recommendedSkills": ["skill1", "skill2"]
           }
@@ -31,59 +27,42 @@ const prompt = `
           Growth rate should be a percentage.
           Include at least 5 skills and trends.
         `;
-    
-        const result = await model.generateContent(prompt)
-        const response = result.response
-        const text = await response.text()
-        
-       const cleanedText = text
-            .replace(/```json\n?/g, "")   // remove ```json
-            .replace(/```/g, "")          // remove closing ```
-            .trim();
 
-       return JSON.parse(cleanedText);
+  const result = await model.generateContent(prompt);
+  const response = result.response;
+  const text = response.text();
+  const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
-    
+  return JSON.parse(cleanedText);
 };
 
-
-// Getting the industry insights
-
-export async function getIndustryInsight() {
+export async function getIndustryInsights() {
   const { userId } = await auth();
-  // console.log("User ID from Clerk:", userId);
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: {
-      clerkUserId: userId,
-    },
-    include:{
+    where: { clerkUserId: userId },
+    include: {
       industryInsight: true,
-    }
+    },
   });
 
-  if (!user) throw new Error("User Not Found");
+  if (!user) throw new Error("User not found");
 
-  const existingInsight = db.industryInsight.findUnique({
-    where : {
-      industry : user.industry,
-    }
-  })
-  if(existingInsight)
-    return existingInsight
-
+  // If no insights exist, generate them
   if (!user.industryInsight) {
     const insights = await generateAIInsights(user.industry);
- 
+
     const industryInsight = await db.industryInsight.create({
       data: {
-       industry : user.industry,
-       ...insights,
-       nextUpdate : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }, 
+        industry: user.industry,
+        ...insights,
+        nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     });
-    return industryInsight
+
+    return industryInsight;
   }
-  return user.industryInsight
+
+  return user.industryInsight;
 }

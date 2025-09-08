@@ -8,24 +8,27 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
 });
+
+// Generate Quiz 
 export async function generateQuiz() {
-  const { userId } = await auth();
+ const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: {
-      clerkUserId: userId,
-    },
+    where: { clerkUserId: userId },
     select: {
       industry: true,
+      skills: true,
     },
   });
+
+
 
   if (!user) throw new Error("User Not Found");
 
   try {
     const prompt = `
-         Generate 10 technical interview questions for a ${user.industry}
+         Generate 2 technical interview questions for a ${user.industry}
          professional${
            user.skills?.length
              ? `with expertise in ${user.skills.join(", ")}`
@@ -49,6 +52,7 @@ export async function generateQuiz() {
 
     const result = await model.generateContent(prompt);
     const response = result.response;
+    console.log(response)
     const text = await response.text();
 
     const cleanedText = text
@@ -64,36 +68,40 @@ export async function generateQuiz() {
   }
 }
 
-export async function saveQuizResult(question, answer, score) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: {
-      clerkUserId: userId,
-    },
-    select: {
-      industry: true,
-    },
-  });
+// Save Quiz Fn
+export async function saveQuizResult(question, answers, score) {
+   const {userId} = await auth();
+     console.log("User ID from Clerk:", userId)
+    if(!userId) throw new Error("Unauthorized");
 
-  if (!user) throw new Error("User Not Found");
+    const user = await db.user.findUnique({
+        where:{
+            clerkUserId : userId,
+        },
+    });
+
+    if(!user) throw new Error("User Not Found")
 
   const questionResults = question.map((q, idx) => ({
     question: q.question,
     answer: q.correctAnswer,
-    userAnswer: q.answer[idx],
-    isCorrect: q.correctAnswer === answer[idx],
+    userAnswer: answers[idx],
+    isCorrect: q.correctAnswer === answers[idx],
     explanation: q.explanation,
   }));
 
+  // Wrong Answers 
+
   const wrongAnswers = questionResults.filter((q) => !q.isCorrect);
-  let improvementTip = nulll;
+
+  let improvementTip = null;
+
   if (wrongAnswers.length > 0) {
     const wrongQuestionText = wrongAnswers
       .map(
         (q) =>
-          `Question: ${question} "\nCorrect Answer : ${q.answer} "\nUser Answer: "${q.userAnswer}"`
+          `Question: ${q.question} "\nCorrect Answer : ${q.answer} "\nUser Answer: "${q.userAnswer}"`
       )
       .join("\n\n");
 
@@ -109,28 +117,65 @@ export async function saveQuizResult(question, answer, score) {
 
     try {
       const result = await model.generateContent(improvementPrompt);
-      const response = result.response;
-      improvementTip = await response.text().trim;
+     if (!result?.response?.text) {
+    console.warn("No response text from model");
+    improvementTip = "Keep practicing to strengthen your skills!";
+  } else {
+    const response = result.response;
+    improvementTip = (await response.text()).trim();
+  }
     } catch (error) {
       console.error("Error generating improvement tip :", error);
     }
+  }
+
+  
+    try {
+    const assessment = await db.assessment.create({
+      data: {
+        userId: user.id,
+        quizScore: score,
+        questions: questionResults,
+        category: "Technical",
+        improvementTip,
+      },
+    });
+
+    return assessment;
+  } catch (error) {
+    console.error("Error saving quiz result:", error);
+    throw new Error("Failed to save quiz result");
+  }
+}
+
+// Assessment Fn 
+
+export async function getAssessment() {
+  const {userId} = await auth();
+  if(!userId) throw new Error ("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where:{
+      clerkUserId : userId,
+    },
+  })
+
+  if(!user) throw new Error ("User not Found")
 
     try {
-        const assesment = await db.assessment.create({
-            data:{
-                userId: user.id,
-                quizScore: score,
-                questions: questionResults,
-                category: "Technical",
-                improvementTip
-            }
-        })
-        return assesment
+      const assessments = db.assessment.findMany({
+        where:{
+          userId: user.id
+        },
+        orderBy:{
+          createdAt: "asc"
+        }
+      })
+
+      console.log(assessments)
+      return assessments
     } catch (error) {
-            console.error("Error having quiz result:", error);
-            throw new Error ("Failed to save quiz result")
+      console.error("Error fetching assessments:", error);
+      throw new Error ("Failed to fetch assessment")
     }
-
-
-  }
 }

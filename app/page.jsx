@@ -1,6 +1,6 @@
-import HeroSection from "@/components/hero";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+// import HeroSection from "@/components/hero";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
+import { Button } from "../components/ui/button";
 import {
   Card,
   CardAction,
@@ -9,14 +9,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { faqs } from "@/data/faqs";
-import { features } from "@/data/features";
-import { howItWorks } from "@/data/howItWorks";
-import { testimonial } from "@/data/testimonial";
+} from "../components/ui/card";
+import { faqs } from "../data/faqs";
+import { features } from "../data/features";
+import { howItWorks } from "../data/howItWorks";
+import { testimonial } from "../data/testimonial";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import HeroSection from "../components/hero";
 
 export default function Home() {
   return (
