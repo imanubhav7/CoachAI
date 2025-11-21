@@ -39,12 +39,12 @@ const HeroSection = () => {
                 <p className='mx-auto max-w-[600] text-muted-foreground md:text-xl' >Advance your career with personalized guidance, interview prep, and AI-powered tools for job success</p>
             </div>
             <div className='flex justify-center space-x-4'>
-                <Link href='/'>
+                <Link href='/dashboard'>
                 <Button size='lg' className="px-8">Get Started</Button>
                 </Link>
-                <Link href='https://www.google.com/'>
+                {/* <Link href=''>
                 <Button size='lg' className="px-8" variant="outline">Get Started</Button>
-                </Link>
+                </Link> */}
             </div>
 
             <div className='hero-img-wrapper mt-5 md:mt-0'> 
